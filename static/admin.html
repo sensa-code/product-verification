@@ -615,6 +615,18 @@
                 資料管理
             </a>
         </nav>
+
+        <div style="position: absolute; bottom: 24px; left: 24px; right: 24px;">
+            <div style="color: rgba(255,255,255,0.6); font-size: 13px; margin-bottom: 12px;">
+                登入帳號：<span id="adminUsername">admin</span>
+            </div>
+            <button onclick="logout()" class="nav-item" style="width: 100%; border: none; cursor: pointer; background: rgba(255,255,255,0.1);">
+                <svg viewBox="0 0 24 24">
+                    <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/>
+                </svg>
+                登出
+            </button>
+        </div>
     </aside>
 
     <!-- 主內容 -->
@@ -756,6 +768,7 @@
 
         // 初始化
         document.addEventListener('DOMContentLoaded', function() {
+            checkAuth();
             loadProducts();
             loadStats();
 
@@ -769,15 +782,51 @@
             });
         });
 
+        // 檢查登入狀態
+        async function checkAuth() {
+            try {
+                const response = await fetch('/api/check-auth');
+                const data = await response.json();
+                if (data.authenticated) {
+                    document.getElementById('adminUsername').textContent = data.username;
+                } else {
+                    window.location.href = '/login';
+                }
+            } catch (error) {
+                window.location.href = '/login';
+            }
+        }
+
+        // 登出
+        async function logout() {
+            try {
+                await fetch('/api/logout', { method: 'POST' });
+                window.location.href = '/login';
+            } catch (error) {
+                window.location.href = '/login';
+            }
+        }
+
+        // 處理 API 回應（檢查 401）
+        async function handleApiResponse(response) {
+            if (response.status === 401) {
+                window.location.href = '/login';
+                throw new Error('Unauthorized');
+            }
+            return response;
+        }
+
         // 載入統計
         async function loadStats() {
             try {
-                const response = await fetch('/api/stats');
+                const response = await handleApiResponse(await fetch('/api/stats'));
                 const data = await response.json();
                 document.getElementById('totalProducts').textContent = data.data.total_products.toLocaleString();
                 document.getElementById('totalHospitals').textContent = data.data.total_hospitals.toLocaleString();
             } catch (error) {
-                console.error('載入統計失敗:', error);
+                if (error.message !== 'Unauthorized') {
+                    console.error('載入統計失敗:', error);
+                }
             }
         }
 
@@ -787,13 +836,15 @@
             const url = `/api/products?page=${currentPage}&per_page=${perPage}&search=${encodeURIComponent(search)}`;
 
             try {
-                const response = await fetch(url);
+                const response = await handleApiResponse(await fetch(url));
                 const data = await response.json();
                 renderTable(data.data);
                 renderPagination(data.pagination);
             } catch (error) {
-                console.error('載入產品失敗:', error);
-                showToast('載入資料失敗', 'error');
+                if (error.message !== 'Unauthorized') {
+                    console.error('載入產品失敗:', error);
+                    showToast('載入資料失敗', 'error');
+                }
             }
         }
 

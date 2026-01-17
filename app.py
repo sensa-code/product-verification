@@ -3,14 +3,17 @@
 使用 Flask + SQLite
 """
 
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify, send_from_directory, session, redirect
 from flask_cors import CORS
+from werkzeug.security import generate_password_hash, check_password_hash
+from functools import wraps
 import sqlite3
 import os
 from datetime import datetime
 
 app = Flask(__name__, static_folder='static')
-CORS(app)
+app.secret_key = os.environ.get('SECRET_KEY', 'your-secret-key-change-in-production')
+CORS(app, supports_credentials=True)
 
 DATABASE = 'products.db'
 
@@ -24,7 +27,7 @@ def init_db():
     """初始化資料庫"""
     conn = get_db()
     cursor = conn.cursor()
-    
+
     # 建立產品資料表
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS products (
@@ -37,15 +40,48 @@ def init_db():
             updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )
     ''')
-    
+
     # 建立索引以加速查詢
     cursor.execute('''
         CREATE INDEX IF NOT EXISTS idx_product_code ON products(product_code)
     ''')
-    
+
+    # 建立管理員資料表
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS admins (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT UNIQUE NOT NULL,
+            password_hash TEXT NOT NULL,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+
+    # 建立預設管理員帳號（如果不存在）
+    cursor.execute('SELECT COUNT(*) FROM admins')
+    if cursor.fetchone()[0] == 0:
+        default_password = os.environ.get('ADMIN_PASSWORD', 'admin123')
+        password_hash = generate_password_hash(default_password)
+        cursor.execute(
+            'INSERT INTO admins (username, password_hash) VALUES (?, ?)',
+            ('admin', password_hash)
+        )
+        print(f"已建立預設管理員帳號: admin")
+
     conn.commit()
     conn.close()
     print("資料庫初始化完成")
+
+
+# ==================== 認證相關 ====================
+
+def login_required(f):
+    """需要登入的裝飾器"""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'admin_id' not in session:
+            return jsonify({'success': False, 'message': '請先登入'}), 401
+        return f(*args, **kwargs)
+    return decorated_function
 
 # ==================== 前台 API ====================
 
@@ -54,10 +90,56 @@ def index():
     """前台查詢頁面"""
     return send_from_directory('static', 'index.html')
 
+@app.route('/login')
+def login_page():
+    """登入頁面"""
+    return send_from_directory('static', 'login.html')
+
 @app.route('/admin')
 def admin():
-    """後台管理頁面"""
+    """後台管理頁面（需登入）"""
+    if 'admin_id' not in session:
+        return redirect('/login')
     return send_from_directory('static', 'admin.html')
+
+@app.route('/api/login', methods=['POST'])
+def api_login():
+    """登入 API"""
+    data = request.get_json()
+    username = data.get('username', '').strip()
+    password = data.get('password', '')
+
+    if not username or not password:
+        return jsonify({'success': False, 'message': '請輸入帳號和密碼'}), 400
+
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute('SELECT id, password_hash FROM admins WHERE username = ?', (username,))
+    admin = cursor.fetchone()
+    conn.close()
+
+    if admin and check_password_hash(admin['password_hash'], password):
+        session['admin_id'] = admin['id']
+        session['admin_username'] = username
+        return jsonify({'success': True, 'message': '登入成功'})
+    else:
+        return jsonify({'success': False, 'message': '帳號或密碼錯誤'}), 401
+
+@app.route('/api/logout', methods=['POST'])
+def api_logout():
+    """登出 API"""
+    session.clear()
+    return jsonify({'success': True, 'message': '已登出'})
+
+@app.route('/api/check-auth', methods=['GET'])
+def check_auth():
+    """檢查登入狀態"""
+    if 'admin_id' in session:
+        return jsonify({
+            'authenticated': True,
+            'username': session.get('admin_username')
+        })
+    return jsonify({'authenticated': False})
 
 @app.route('/api/verify/<product_code>', methods=['GET'])
 def verify_product(product_code):
@@ -98,6 +180,7 @@ def verify_product(product_code):
 # ==================== 後台 API ====================
 
 @app.route('/api/products', methods=['GET'])
+@login_required
 def get_all_products():
     """
     取得所有產品（支援分頁）
@@ -152,6 +235,7 @@ def get_all_products():
     })
 
 @app.route('/api/products', methods=['POST'])
+@login_required
 def add_product():
     """
     新增產品
@@ -199,6 +283,7 @@ def add_product():
         }), 409
 
 @app.route('/api/products/<int:product_id>', methods=['PUT'])
+@login_required
 def update_product(product_id):
     """
     更新產品
@@ -267,6 +352,7 @@ def update_product(product_id):
     })
 
 @app.route('/api/products/<int:product_id>', methods=['DELETE'])
+@login_required
 def delete_product(product_id):
     """
     刪除產品
@@ -293,6 +379,7 @@ def delete_product(product_id):
     })
 
 @app.route('/api/products/batch', methods=['POST'])
+@login_required
 def batch_add_products():
     """
     批次新增產品
@@ -342,6 +429,7 @@ def batch_add_products():
     })
 
 @app.route('/api/stats', methods=['GET'])
+@login_required
 def get_stats():
     """取得統計資料"""
     conn = get_db()
