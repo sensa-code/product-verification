@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>產品真偽驗證系統</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #0f4c3a;
+            --primary-light: #1a7a5e;
+            --accent: #d4af37;
+            --success: #10b981;
+            --danger: #ef4444;
+            --bg-cream: #faf8f5;
+            --text-dark: #1a1a1a;
+            --text-muted: #6b7280;
+            --border: #e5e2db;
+        }
+
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background: var(--bg-cream);
+            min-height: 100vh;
+            color: var(--text-dark);
+        }
+
+        /* 頂部裝飾條 */
+        .top-accent {
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--accent), var(--primary));
+        }
+
+        /* 主容器 */
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 60px 24px;
+        }
+
+        /* 標誌區域 */
+        .logo-section {
+            text-align: center;
+            margin-bottom: 48px;
+        }
+
+        .logo-icon {
+            width: 80px;
+            height: 80px;
+            background: var(--primary);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+            box-shadow: 0 8px 32px rgba(15, 76, 58, 0.2);
+        }
+
+        .logo-icon svg {
+            width: 44px;
+            height: 44px;
+            fill: white;
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 8px;
+            letter-spacing: 1px;
+        }
+
+        .subtitle {
+            font-size: 15px;
+            color: var(--text-muted);
+            font-weight: 300;
+        }
+
+        /* 查詢卡片 */
+        .search-card {
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+            border: 1px solid var(--border);
+        }
+
+        .input-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .input-wrapper {
+            position: relative;
+            margin-bottom: 24px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 16px 20px;
+            font-size: 20px;
+            font-family: 'Courier New', monospace;
+            font-weight: 600;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            background: var(--bg-cream);
+            color: var(--text-dark);
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: white;
+            box-shadow: 0 0 0 4px rgba(15, 76, 58, 0.1);
+        }
+
+        .search-input::placeholder {
+            color: #ccc;
+            letter-spacing: 2px;
+        }
+
+        .search-btn {
+            width: 100%;
+            padding: 16px;
+            font-size: 16px;
+            font-weight: 600;
+            color: white;
+            background: var(--primary);
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .search-btn:hover {
+            background: var(--primary-light);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(15, 76, 58, 0.3);
+        }
+
+        .search-btn:active {
+            transform: translateY(0);
+        }
+
+        .search-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 結果區域 */
+        .result-section {
+            margin-top: 32px;
+            display: none;
+        }
+
+        .result-section.show {
+            display: block;
+            animation: fadeIn 0.4s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 驗證成功 */
+        .result-verified {
+            background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+            border: 2px solid var(--success);
+            border-radius: 16px;
+            padding: 32px;
+        }
+
+        .result-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 24px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .result-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .result-verified .result-icon {
+            background: var(--success);
+        }
+
+        .result-icon svg {
+            width: 28px;
+            height: 28px;
+            fill: white;
+        }
+
+        .result-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: #065f46;
+        }
+
+        .result-subtitle {
+            font-size: 14px;
+            color: #047857;
+            margin-top: 4px;
+        }
+
+        .result-details {
+            display: grid;
+            gap: 16px;
+        }
+
+        .detail-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .detail-label {
+            font-size: 12px;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .detail-value {
+            font-size: 17px;
+            font-weight: 500;
+            color: var(--text-dark);
+        }
+
+        .detail-value.code {
+            font-family: 'Courier New', monospace;
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--primary);
+            letter-spacing: 2px;
+        }
+
+        /* 驗證失敗 */
+        .result-failed {
+            background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+            border: 2px solid var(--danger);
+            border-radius: 16px;
+            padding: 32px;
+            text-align: center;
+        }
+
+        .result-failed .result-icon {
+            background: var(--danger);
+            margin: 0 auto 20px;
+        }
+
+        .result-failed .result-title {
+            color: #991b1b;
+            margin-bottom: 12px;
+        }
+
+        .result-failed .result-message {
+            color: #b91c1c;
+            font-size: 15px;
+            line-height: 1.6;
+        }
+
+        .warning-box {
+            background: #fef3c7;
+            border: 1px solid #f59e0b;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 20px;
+            font-size: 14px;
+            color: #92400e;
+        }
+
+        /* 頁尾 */
+        .footer {
+            text-align: center;
+            margin-top: 48px;
+            padding-top: 24px;
+            border-top: 1px solid var(--border);
+        }
+
+        .footer-text {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        /* 載入動畫 */
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 32px;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* RWD */
+        @media (max-width: 480px) {
+            .container {
+                padding: 40px 16px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            .search-card {
+                padding: 24px;
+            }
+
+            .search-input {
+                font-size: 18px;
+                padding: 14px 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="top-accent"></div>
+    
+    <div class="container">
+        <div class="logo-section">
+            <div class="logo-icon">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/>
+                </svg>
+            </div>
+            <h1>產品真偽驗證</h1>
+            <p class="subtitle">輸入產品編碼，確認您購買的是正品</p>
+        </div>
+
+        <div class="search-card">
+            <label class="input-label">產品編碼</label>
+            <div class="input-wrapper">
+                <input 
+                    type="text" 
+                    id="productCode" 
+                    class="search-input" 
+                    placeholder="例如：T501603"
+                    maxlength="20"
+                    autocomplete="off"
+                >
+            </div>
+            <button class="search-btn" onclick="verifyProduct()">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+                </svg>
+                立即驗證
+            </button>
+
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+            </div>
+
+            <div class="result-section" id="resultSection">
+                <!-- 結果會動態插入這裡 -->
+            </div>
+        </div>
+
+        <div class="footer">
+            <p class="footer-text">如有任何疑問，請聯繫我們的客服專線</p>
+        </div>
+    </div>
+
+    <script>
+        // 輸入框按 Enter 觸發搜尋
+        document.getElementById('productCode').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                verifyProduct();
+            }
+        });
+
+        // 自動轉大寫
+        document.getElementById('productCode').addEventListener('input', function(e) {
+            this.value = this.value.toUpperCase();
+        });
+
+        async function verifyProduct() {
+            const codeInput = document.getElementById('productCode');
+            const code = codeInput.value.trim();
+            
+            if (!code) {
+                alert('請輸入產品編碼');
+                codeInput.focus();
+                return;
+            }
+
+            const loading = document.getElementById('loading');
+            const resultSection = document.getElementById('resultSection');
+            
+            // 顯示載入中
+            loading.classList.add('show');
+            resultSection.classList.remove('show');
+
+            try {
+                const response = await fetch(`/api/verify/${encodeURIComponent(code)}`);
+                const data = await response.json();
+
+                loading.classList.remove('show');
+
+                if (data.verified) {
+                    // 驗證成功
+                    resultSection.innerHTML = `
+                        <div class="result-verified">
+                            <div class="result-header">
+                                <div class="result-icon">
+                                    <svg viewBox="0 0 24 24">
+                                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <div class="result-title">驗證成功</div>
+                                    <div class="result-subtitle">此產品為本公司正式出貨商品</div>
+                                </div>
+                            </div>
+                            <div class="result-details">
+                                <div class="detail-item">
+                                    <span class="detail-label">產品編碼</span>
+                                    <span class="detail-value code">${data.data.product_code}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">商品名稱</span>
+                                    <span class="detail-value">${data.data.product_name}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">購買醫院</span>
+                                    <span class="detail-value">${data.data.hospital_name}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">出貨日期</span>
+                                    <span class="detail-value">${formatDate(data.data.purchase_date)}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    // 驗證失敗
+                    resultSection.innerHTML = `
+                        <div class="result-failed">
+                            <div class="result-icon">
+                                <svg viewBox="0 0 24 24">
+                                    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                                </svg>
+                            </div>
+                            <div class="result-title">查無此編碼</div>
+                            <p class="result-message">
+                                我們的系統中找不到此產品編碼。<br>
+                                請確認您輸入的編碼是否正確。
+                            </p>
+                            <div class="warning-box">
+                                ⚠️ 如確認編碼無誤但仍查無資料，該產品可能並非由本公司出貨，請謹慎確認來源。
+                            </div>
+                        </div>
+                    `;
+                }
+
+                resultSection.classList.add('show');
+
+            } catch (error) {
+                loading.classList.remove('show');
+                alert('連線發生錯誤，請稍後再試');
+                console.error('Error:', error);
+            }
+        }
+
+        function formatDate(dateStr) {
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('zh-TW', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+        }
+    </script>
+</body>
+</html>

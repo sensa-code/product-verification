@@ -1,0 +1,1092 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>後台管理 - 產品驗證系統</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #0f4c3a;
+            --primary-light: #1a7a5e;
+            --accent: #d4af37;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --bg-cream: #faf8f5;
+            --bg-white: #ffffff;
+            --text-dark: #1a1a1a;
+            --text-muted: #6b7280;
+            --border: #e5e2db;
+        }
+
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background: #f3f4f6;
+            min-height: 100vh;
+            color: var(--text-dark);
+        }
+
+        /* 側邊欄 */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 260px;
+            background: var(--primary);
+            color: white;
+            padding: 24px;
+            z-index: 100;
+        }
+
+        .sidebar-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 24px;
+        }
+
+        .sidebar-logo-icon {
+            width: 40px;
+            height: 40px;
+            background: rgba(255,255,255,0.15);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .sidebar-logo-icon svg {
+            width: 24px;
+            height: 24px;
+            fill: white;
+        }
+
+        .sidebar-logo-text {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: 8px;
+            color: rgba(255,255,255,0.7);
+            text-decoration: none;
+            margin-bottom: 8px;
+            transition: all 0.2s;
+        }
+
+        .nav-item:hover, .nav-item.active {
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+
+        .nav-item svg {
+            width: 20px;
+            height: 20px;
+            fill: currentColor;
+        }
+
+        /* 主內容區 */
+        .main-content {
+            margin-left: 260px;
+            padding: 32px;
+        }
+
+        /* 頂部統計 */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--primary);
+            margin-top: 8px;
+        }
+
+        /* 工具列 */
+        .toolbar {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 250px;
+            position: relative;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 12px 16px 12px 44px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 15px;
+            background: white;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(15, 76, 58, 0.1);
+        }
+
+        .search-box svg {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 20px;
+            fill: var(--text-muted);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+
+        .btn svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-light);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: var(--text-dark);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-cream);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .btn-sm {
+            padding: 8px 12px;
+            font-size: 13px;
+        }
+
+        /* 資料表格 */
+        .table-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 14px 16px;
+            text-align: left;
+        }
+
+        th {
+            background: var(--bg-cream);
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border);
+        }
+
+        td {
+            border-bottom: 1px solid #f3f4f6;
+            font-size: 14px;
+        }
+
+        tr:hover {
+            background: #fafafa;
+        }
+
+        .code-cell {
+            font-family: 'Courier New', monospace;
+            font-weight: 600;
+            color: var(--primary);
+            letter-spacing: 1px;
+        }
+
+        .actions-cell {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .btn-icon svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .btn-edit {
+            background: #e0f2fe;
+            color: #0369a1;
+        }
+
+        .btn-edit:hover {
+            background: #bae6fd;
+        }
+
+        .btn-delete {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .btn-delete:hover {
+            background: #fecaca;
+        }
+
+        /* 分頁 */
+        .pagination {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px;
+            border-top: 1px solid #f3f4f6;
+        }
+
+        .pagination-info {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        .pagination-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .page-btn {
+            padding: 8px 14px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: white;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .page-btn:hover:not(:disabled) {
+            background: var(--bg-cream);
+            border-color: var(--primary);
+        }
+
+        .page-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .page-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 200;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: modalIn 0.3s ease;
+        }
+
+        @keyframes modalIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95) translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .modal-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: #f3f4f6;
+        }
+
+        .modal-close svg {
+            width: 20px;
+            height: 20px;
+            fill: var(--text-muted);
+        }
+
+        .modal-body {
+            padding: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: var(--text-dark);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 15px;
+            transition: all 0.2s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(15, 76, 58, 0.1);
+        }
+
+        .modal-footer {
+            padding: 16px 24px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+
+        /* 批次上傳 */
+        .upload-zone {
+            border: 2px dashed var(--border);
+            border-radius: 12px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .upload-zone:hover {
+            border-color: var(--primary);
+            background: rgba(15, 76, 58, 0.02);
+        }
+
+        .upload-zone svg {
+            width: 48px;
+            height: 48px;
+            fill: var(--text-muted);
+            margin-bottom: 16px;
+        }
+
+        .upload-zone-text {
+            font-size: 15px;
+            color: var(--text-dark);
+            margin-bottom: 8px;
+        }
+
+        .upload-zone-hint {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .template-link {
+            color: var(--primary);
+            text-decoration: underline;
+            cursor: pointer;
+        }
+
+        /* 空狀態 */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+        }
+
+        .empty-state svg {
+            width: 64px;
+            height: 64px;
+            fill: #d1d5db;
+            margin-bottom: 16px;
+        }
+
+        .empty-state-text {
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+
+        /* Toast 通知 */
+        .toast-container {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            z-index: 300;
+        }
+
+        .toast {
+            background: white;
+            border-radius: 8px;
+            padding: 16px 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: toastIn 0.3s ease;
+            max-width: 360px;
+        }
+
+        @keyframes toastIn {
+            from {
+                opacity: 0;
+                transform: translateX(100%);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .toast-success {
+            border-left: 4px solid var(--success);
+        }
+
+        .toast-error {
+            border-left: 4px solid var(--danger);
+        }
+
+        .toast svg {
+            width: 20px;
+            height: 20px;
+            flex-shrink: 0;
+        }
+
+        .toast-success svg {
+            fill: var(--success);
+        }
+
+        .toast-error svg {
+            fill: var(--danger);
+        }
+
+        /* RWD */
+        @media (max-width: 768px) {
+            .sidebar {
+                display: none;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 側邊欄 -->
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            <div class="sidebar-logo-icon">
+                <svg viewBox="0 0 24 24">
+                    <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/>
+                </svg>
+            </div>
+            <span class="sidebar-logo-text">產品驗證系統</span>
+        </div>
+
+        <nav>
+            <a href="/" class="nav-item">
+                <svg viewBox="0 0 24 24">
+                    <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+                </svg>
+                前台查詢
+            </a>
+            <a href="/admin" class="nav-item active">
+                <svg viewBox="0 0 24 24">
+                    <path d="M4 8h4V4H4v4zm6 12h4v-4h-4v4zm-6 0h4v-4H4v4zm0-6h4v-4H4v4zm6 0h4v-4h-4v4zm6-10v4h4V4h-4zm-6 4h4V4h-4v4zm6 6h4v-4h-4v4zm0 6h4v-4h-4v4z"/>
+                </svg>
+                資料管理
+            </a>
+        </nav>
+    </aside>
+
+    <!-- 主內容 -->
+    <main class="main-content">
+        <!-- 統計 -->
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="stat-label">產品總數</div>
+                <div class="stat-value" id="totalProducts">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">合作醫院數</div>
+                <div class="stat-value" id="totalHospitals">0</div>
+            </div>
+        </div>
+
+        <!-- 工具列 -->
+        <div class="toolbar">
+            <div class="search-box">
+                <svg viewBox="0 0 24 24">
+                    <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+                </svg>
+                <input type="text" id="searchInput" placeholder="搜尋編碼、產品名稱或醫院...">
+            </div>
+            <button class="btn btn-secondary" onclick="openBatchModal()">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/>
+                </svg>
+                批次上傳
+            </button>
+            <button class="btn btn-primary" onclick="openAddModal()">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+                </svg>
+                新增產品
+            </button>
+        </div>
+
+        <!-- 資料表格 -->
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>產品編碼</th>
+                        <th>商品名稱</th>
+                        <th>購買醫院</th>
+                        <th>出貨日期</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="productTable">
+                    <!-- 動態載入 -->
+                </tbody>
+            </table>
+
+            <div class="pagination">
+                <div class="pagination-info" id="paginationInfo">
+                    顯示 0 - 0 筆，共 0 筆
+                </div>
+                <div class="pagination-buttons" id="paginationButtons">
+                    <!-- 動態載入 -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 新增/編輯 Modal -->
+    <div class="modal-overlay" id="productModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">新增產品</h3>
+                <button class="modal-close" onclick="closeModal()">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editId">
+                <div class="form-group">
+                    <label class="form-label">產品編碼 *</label>
+                    <input type="text" class="form-input" id="inputCode" placeholder="例如：T501603" style="text-transform: uppercase;">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">商品名稱 *</label>
+                    <input type="text" class="form-input" id="inputName" placeholder="輸入商品名稱">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">購買醫院 *</label>
+                    <input type="text" class="form-input" id="inputHospital" placeholder="輸入醫院名稱">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">出貨日期 *</label>
+                    <input type="date" class="form-input" id="inputDate">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal()">取消</button>
+                <button class="btn btn-primary" onclick="saveProduct()">儲存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 批次上傳 Modal -->
+    <div class="modal-overlay" id="batchModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">批次上傳</h3>
+                <button class="modal-close" onclick="closeBatchModal()">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="upload-zone" onclick="document.getElementById('fileInput').click()">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/>
+                    </svg>
+                    <div class="upload-zone-text">點擊或拖曳 CSV 檔案到這裡</div>
+                    <div class="upload-zone-hint">
+                        格式：產品編碼, 商品名稱, 購買醫院, 出貨日期<br>
+                        <span class="template-link" onclick="downloadTemplate(event)">下載範例檔案</span>
+                    </div>
+                </div>
+                <input type="file" id="fileInput" accept=".csv" style="display: none;" onchange="handleFileUpload(event)">
+                <div id="uploadResult" style="margin-top: 20px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast 容器 -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script>
+        let currentPage = 1;
+        const perPage = 15;
+        let searchTimeout = null;
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            loadProducts();
+            loadStats();
+
+            // 搜尋輸入延遲
+            document.getElementById('searchInput').addEventListener('input', function() {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    currentPage = 1;
+                    loadProducts();
+                }, 300);
+            });
+        });
+
+        // 載入統計
+        async function loadStats() {
+            try {
+                const response = await fetch('/api/stats');
+                const data = await response.json();
+                document.getElementById('totalProducts').textContent = data.data.total_products.toLocaleString();
+                document.getElementById('totalHospitals').textContent = data.data.total_hospitals.toLocaleString();
+            } catch (error) {
+                console.error('載入統計失敗:', error);
+            }
+        }
+
+        // 載入產品列表
+        async function loadProducts() {
+            const search = document.getElementById('searchInput').value;
+            const url = `/api/products?page=${currentPage}&per_page=${perPage}&search=${encodeURIComponent(search)}`;
+
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                renderTable(data.data);
+                renderPagination(data.pagination);
+            } catch (error) {
+                console.error('載入產品失敗:', error);
+                showToast('載入資料失敗', 'error');
+            }
+        }
+
+        // 渲染表格
+        function renderTable(products) {
+            const tbody = document.getElementById('productTable');
+
+            if (products.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="5">
+                            <div class="empty-state">
+                                <svg viewBox="0 0 24 24">
+                                    <path d="M20 6h-8l-2-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V6h5.17l2 2H20v10z"/>
+                                </svg>
+                                <div class="empty-state-text">目前沒有產品資料</div>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = products.map(product => `
+                <tr>
+                    <td class="code-cell">${escapeHtml(product.product_code)}</td>
+                    <td>${escapeHtml(product.product_name)}</td>
+                    <td>${escapeHtml(product.hospital_name)}</td>
+                    <td>${formatDate(product.purchase_date)}</td>
+                    <td>
+                        <div class="actions-cell">
+                            <button class="btn-icon btn-edit" onclick="editProduct(${product.id})" title="編輯">
+                                <svg viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                                </svg>
+                            </button>
+                            <button class="btn-icon btn-delete" onclick="deleteProduct(${product.id})" title="刪除">
+                                <svg viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // 渲染分頁
+        function renderPagination(pagination) {
+            const { page, per_page, total, total_pages } = pagination;
+            const start = (page - 1) * per_page + 1;
+            const end = Math.min(page * per_page, total);
+
+            document.getElementById('paginationInfo').textContent = 
+                total > 0 ? `顯示 ${start} - ${end} 筆，共 ${total} 筆` : '沒有資料';
+
+            let buttons = '';
+            
+            buttons += `<button class="page-btn" onclick="goToPage(${page - 1})" ${page <= 1 ? 'disabled' : ''}>上一頁</button>`;
+
+            for (let i = 1; i <= total_pages; i++) {
+                if (i === 1 || i === total_pages || (i >= page - 2 && i <= page + 2)) {
+                    buttons += `<button class="page-btn ${i === page ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
+                } else if (i === page - 3 || i === page + 3) {
+                    buttons += `<span style="padding: 8px;">...</span>`;
+                }
+            }
+
+            buttons += `<button class="page-btn" onclick="goToPage(${page + 1})" ${page >= total_pages ? 'disabled' : ''}>下一頁</button>`;
+
+            document.getElementById('paginationButtons').innerHTML = buttons;
+        }
+
+        function goToPage(page) {
+            currentPage = page;
+            loadProducts();
+        }
+
+        // 開啟新增 Modal
+        function openAddModal() {
+            document.getElementById('modalTitle').textContent = '新增產品';
+            document.getElementById('editId').value = '';
+            document.getElementById('inputCode').value = '';
+            document.getElementById('inputName').value = '';
+            document.getElementById('inputHospital').value = '';
+            document.getElementById('inputDate').value = new Date().toISOString().split('T')[0];
+            document.getElementById('productModal').classList.add('show');
+        }
+
+        // 編輯產品
+        async function editProduct(id) {
+            try {
+                const response = await fetch(`/api/products?search=&page=1&per_page=1000`);
+                const data = await response.json();
+                const product = data.data.find(p => p.id === id);
+
+                if (product) {
+                    document.getElementById('modalTitle').textContent = '編輯產品';
+                    document.getElementById('editId').value = id;
+                    document.getElementById('inputCode').value = product.product_code;
+                    document.getElementById('inputName').value = product.product_name;
+                    document.getElementById('inputHospital').value = product.hospital_name;
+                    document.getElementById('inputDate').value = product.purchase_date;
+                    document.getElementById('productModal').classList.add('show');
+                }
+            } catch (error) {
+                showToast('載入產品資料失敗', 'error');
+            }
+        }
+
+        // 關閉 Modal
+        function closeModal() {
+            document.getElementById('productModal').classList.remove('show');
+        }
+
+        // 儲存產品
+        async function saveProduct() {
+            const id = document.getElementById('editId').value;
+            const productData = {
+                product_code: document.getElementById('inputCode').value.trim(),
+                product_name: document.getElementById('inputName').value.trim(),
+                hospital_name: document.getElementById('inputHospital').value.trim(),
+                purchase_date: document.getElementById('inputDate').value
+            };
+
+            // 驗證
+            if (!productData.product_code || !productData.product_name || 
+                !productData.hospital_name || !productData.purchase_date) {
+                showToast('請填寫所有必填欄位', 'error');
+                return;
+            }
+
+            try {
+                const url = id ? `/api/products/${id}` : '/api/products';
+                const method = id ? 'PUT' : 'POST';
+
+                const response = await fetch(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(productData)
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showToast(id ? '產品更新成功' : '產品新增成功', 'success');
+                    closeModal();
+                    loadProducts();
+                    loadStats();
+                } else {
+                    showToast(data.message || '操作失敗', 'error');
+                }
+            } catch (error) {
+                showToast('操作失敗，請稍後再試', 'error');
+            }
+        }
+
+        // 刪除產品
+        async function deleteProduct(id) {
+            if (!confirm('確定要刪除此產品嗎？此操作無法復原。')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/products/${id}`, {
+                    method: 'DELETE'
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showToast('產品刪除成功', 'success');
+                    loadProducts();
+                    loadStats();
+                } else {
+                    showToast(data.message || '刪除失敗', 'error');
+                }
+            } catch (error) {
+                showToast('刪除失敗，請稍後再試', 'error');
+            }
+        }
+
+        // 批次上傳
+        function openBatchModal() {
+            document.getElementById('uploadResult').innerHTML = '';
+            document.getElementById('fileInput').value = '';
+            document.getElementById('batchModal').classList.add('show');
+        }
+
+        function closeBatchModal() {
+            document.getElementById('batchModal').classList.remove('show');
+        }
+
+        function downloadTemplate(event) {
+            event.stopPropagation();
+            const csv = 'product_code,product_name,hospital_name,purchase_date\nT501603,商品範例A,台北動物醫院,2024-01-15\nT501604,商品範例B,高雄動物醫院,2024-01-16';
+            const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'template.csv';
+            link.click();
+        }
+
+        async function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const resultDiv = document.getElementById('uploadResult');
+            resultDiv.innerHTML = '<p style="color: var(--text-muted);">處理中...</p>';
+
+            try {
+                const text = await file.text();
+                const lines = text.split('\n').filter(line => line.trim());
+                
+                // 跳過標題行
+                const products = [];
+                for (let i = 1; i < lines.length; i++) {
+                    const cols = lines[i].split(',').map(s => s.trim().replace(/^["']|["']$/g, ''));
+                    if (cols.length >= 4) {
+                        products.push({
+                            product_code: cols[0],
+                            product_name: cols[1],
+                            hospital_name: cols[2],
+                            purchase_date: cols[3]
+                        });
+                    }
+                }
+
+                if (products.length === 0) {
+                    resultDiv.innerHTML = '<p style="color: var(--danger);">找不到有效的資料，請檢查 CSV 格式</p>';
+                    return;
+                }
+
+                const response = await fetch('/api/products/batch', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ products })
+                });
+
+                const data = await response.json();
+
+                let html = `<p style="color: var(--success);">成功匯入 ${data.success_count} 筆資料</p>`;
+                if (data.errors && data.errors.length > 0) {
+                    html += `<p style="color: var(--danger); margin-top: 10px;">失敗 ${data.errors.length} 筆：</p>`;
+                    html += `<ul style="font-size: 13px; color: var(--danger); margin-top: 5px;">`;
+                    data.errors.slice(0, 5).forEach(err => {
+                        html += `<li>${escapeHtml(err)}</li>`;
+                    });
+                    if (data.errors.length > 5) {
+                        html += `<li>...還有 ${data.errors.length - 5} 筆錯誤</li>`;
+                    }
+                    html += '</ul>';
+                }
+
+                resultDiv.innerHTML = html;
+                loadProducts();
+                loadStats();
+
+            } catch (error) {
+                resultDiv.innerHTML = '<p style="color: var(--danger);">檔案處理失敗，請確認格式正確</p>';
+            }
+        }
+
+        // Toast 通知
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            
+            const icon = type === 'success' 
+                ? '<svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>'
+                : '<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>';
+
+            toast.innerHTML = `${icon}<span>${escapeHtml(message)}</span>`;
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(100%)';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // 工具函數
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function formatDate(dateStr) {
+            return new Date(dateStr).toLocaleDateString('zh-TW');
+        }
+    </script>
+</body>
+</html>
