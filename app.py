@@ -289,7 +289,7 @@ def add_product():
             data['product_code'].upper(),
             data['product_name'],
             data['hospital_name'],
-            data['purchase_date']
+            data['purchase_date'].replace('/', '-')
         ))
         product_id = cursor.fetchone()[0]
         conn.commit()
@@ -427,11 +427,12 @@ def batch_add_products():
     errors = []
     for i, product in enumerate(products):
         try:
+            purchase_date = product['purchase_date'].replace('/', '-')
             valid_products.append((
                 product['product_code'].upper(),
                 product['product_name'],
                 product['hospital_name'],
-                product['purchase_date']
+                purchase_date
             ))
         except KeyError as e:
             errors.append(f"第 {i+1} 筆: 缺少欄位 {e}")
