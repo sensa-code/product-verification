@@ -427,15 +427,15 @@ def batch_add_products():
     errors = []
     for i, product in enumerate(products):
         try:
-            purchase_date = product['purchase_date'].replace('/', '-')
-            valid_products.append((
-                product['product_code'].upper(),
-                product['product_name'],
-                product['hospital_name'],
-                purchase_date
-            ))
-        except KeyError as e:
-            errors.append(f"第 {i+1} 筆: 缺少欄位 {e}")
+            code = product.get('product_code', '').strip()
+            name = product.get('product_name', '').strip()
+            hospital = product.get('hospital_name', '').strip()
+            date = product.get('purchase_date', '').strip().replace('/', '-')
+            if not code or not name or not hospital or not date:
+                continue
+            valid_products.append((code.upper(), name, hospital, date))
+        except Exception as e:
+            errors.append(f"第 {i+1} 筆: {str(e)}")
 
     if not valid_products:
         return jsonify({
